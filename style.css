@@ -1,0 +1,154 @@
+@media (max-width: 768px) {
+    .header {
+        top: 10px;
+        padding: 0 10px;
+    }
+
+    .header h1 {
+        font-size: 1.5rem;
+        margin-bottom: 0.3rem;
+    }
+
+    .header p {
+        font-size: 0.9rem;
+    }
+
+    .search-container {
+        top: 80px;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        padding: 0 20px;
+        width: 100%;
+        left: 0;
+        transform: none;
+    }
+
+    .search-box {
+        width: 100%;
+        max-width: 300px;
+        font-size: 14px;
+        padding: 12px 20px;
+    }
+
+    .search-btn {
+        font-size: 14px;
+        padding: 12px 25px;
+        width: 100%;
+        max-width: 300px;
+    }
+
+    .info-panel {
+        display: none;
+    }
+
+    .coordinates-display {
+        bottom: 10px;
+        left: 10px;
+        right: 10px;
+        text-align: center;
+        font-size: 0.8rem;
+        padding: 8px 12px;
+    }
+
+    .leaflet-popup-content-wrapper {
+        max-width: 90vw !important;
+        max-height: 80vh !important;
+    }
+
+    .popup-content-wrapper {
+        max-height: 70vh;
+    }
+
+    .crop-recommendations-container {
+        max-height: 250px;
+    }
+
+    .weather-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    .weather-item {
+        padding: 8px;
+        font-size: 0.8rem;
+    }
+
+    .soil-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+    }
+
+    .soil-item {
+        padding: 6px;
+        font-size: 0.75rem;
+    }
+
+    .crop-recommendation {
+        padding: 10px;
+        margin-bottom: 6px;
+    }
+
+    .crop-recommendation h5 {
+        font-size: 0.9rem;
+    }
+
+    .popup-title {
+        font-size: 1.2rem;
+        margin-bottom: 12px;
+    }
+
+    .popup-section h4 {
+        font-size: 1rem;
+        margin-bottom: 6px;
+    }
+}
+
+@media (max-width: 480px) {
+    .header h1 {
+        font-size: 1.3rem;
+    }
+
+    .header p {
+        font-size: 0.8rem;
+    }
+
+    .search-container {
+        top: 70px;
+        padding: 0 15px;
+    }
+
+    .search-box {
+        max-width: 260px;
+        font-size: 13px;
+        padding: 10px 15px;
+    }
+
+    .search-btn {
+        max-width: 260px;
+        font-size: 13px;
+        padding: 10px 20px;
+    }
+
+    .weather-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .weather-item {
+        font-size: 0.75rem;
+        padding: 6px;
+    }
+
+    .soil-item {
+        font-size: 0.7rem;
+        padding: 5px;
+    }
+
+    .crop-recommendation {
+        padding: 8px;
+    }
+
+    .crop-recommendation h5 {
+        font-size: 0.85rem;
+    }
+}
