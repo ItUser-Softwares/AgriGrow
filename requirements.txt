@@ -1,0 +1,9 @@
+requests
+fastapi
+pydantic
+typing
+logging
+asyncio
+aiohttp
+uvicorn
+time

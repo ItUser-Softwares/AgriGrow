@@ -12,12 +12,11 @@ from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 import logging
 import asyncio
 import aiohttp
 import uvicorn
-from typing import Tuple
 import time
 
 weather_cache = {}  # key: (lat, lon), value: {"data": ..., "timestamp": ...}
