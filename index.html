@@ -1,406 +1,15 @@
-@media (max-width: 768px) {
-            .header h1 {
-                font-size: 1.8rem;
-            }
-            
-            .search-box {
-                width: 280px;
-                font-size: 14px;
-            }
-            
-            .search-btn {
-                font-size: 14px;
-                padding: 12px 20px;
-            }
-            
-            .info-panel {
-                width: 280px;
-                right: 10px;
-                top: 180px;
-            }
-            
-            .search-container {
-                flex-direction: column;
-                align-items: center;
-            }
-
-            .leaflet-popup-content-wrapper {
-                max-width: 300px;
-            }
-            
-            .popup-content-wrapper {
-                max-height: 50vh;
-            }
-            
-            .crop-recommendations-container {
-                max-height: 200px;
-            }
-        }<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pakistan Agriculture Intelligence</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        .container {
-            position: relative;
-            width: 100%;
-            height: 100vh;
-        }
-
-        .header {
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1000;
-            text-align: center;
-            color: white;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-        }
-
-        .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 0.5rem;
-            animation: fadeInDown 1s ease-out;
-        }
-
-        .header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
-            animation: fadeInUp 1s ease-out 0.3s both;
-        }
-
-        .search-container {
-            position: absolute;
-            top: 120px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1001;
-            display: flex;
-            gap: 10px;
-            animation: fadeInUp 1s ease-out 0.6s both;
-        }
-
-        .search-box {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            border-radius: 50px;
-            padding: 15px 25px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: white;
-            font-size: 16px;
-            width: 350px;
-            outline: none;
-            transition: all 0.3s ease;
-        }
-
-        .search-box::placeholder {
-            color: rgba(255, 255, 255, 0.7);
-        }
-
-        .search-box:focus {
-            background: rgba(255, 255, 255, 0.25);
-            transform: scale(1.02);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-        }
-
-        .search-btn {
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50px;
-            padding: 15px 25px;
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 16px;
-        }
-
-        .search-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-        }
-
-        #map {
-            width: 100%;
-            height: 100vh;
-            border-radius: 0;
-            position: relative;
-            z-index: 1;
-        }
-
-        .info-panel {
-            position: absolute;
-            top: 200px;
-            right: 20px;
-            width: 320px;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(15px);
-            border-radius: 20px;
-            padding: 25px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: white;
-            z-index: 1000;
-            animation: slideInRight 1s ease-out 0.9s both;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        }
-
-        .info-panel h3 {
-            margin-bottom: 15px;
-            font-size: 1.3rem;
-            text-align: center;
-            color: #fff;
-        }
-
-        .info-item {
-            margin-bottom: 12px;
-            padding: 10px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            border-left: 4px solid #4CAF50;
-        }
-
-        .leaflet-popup-content-wrapper {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            max-width: 400px;
-            max-height: 80vh;
-        }
-
-        .leaflet-popup-content {
-            margin: 20px;
-            font-family: 'Segoe UI', sans-serif;
-            max-height: 70vh;
-            overflow-y: auto;
-        }
-
-        .popup-content-wrapper {
-            max-height: 65vh;
-            overflow-y: auto;
-            padding-right: 5px;
-        }
-
-        .popup-content-wrapper::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .popup-content-wrapper::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.1);
-            border-radius: 3px;
-        }
-
-        .popup-content-wrapper::-webkit-scrollbar-thumb {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 3px;
-        }
-
-        .popup-content-wrapper::-webkit-scrollbar-thumb:hover {
-            background: rgba(0, 0, 0, 0.5);
-        }
-
-        .popup-title {
-            font-size: 1.4rem;
-            font-weight: bold;
-            color: #2c3e50;
-            margin-bottom: 15px;
-            text-align: center;
-            border-bottom: 2px solid #3498db;
-            padding-bottom: 10px;
-        }
-
-        .popup-section {
-            margin-bottom: 15px;
-        }
-
-        .popup-section h4 {
-            color: #2980b9;
-            margin-bottom: 8px;
-            font-size: 1.1rem;
-        }
-
-        .weather-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .weather-item {
-            background: linear-gradient(135deg, #74b9ff, #0984e3);
-            color: white;
-            padding: 10px;
-            border-radius: 8px;
-            text-align: center;
-            font-size: 0.9rem;
-        }
-
-        .soil-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin-bottom: 15px;
-        }
-
-        .soil-item {
-            background: linear-gradient(135deg, #a29bfe, #6c5ce7);
-            color: white;
-            padding: 8px;
-            border-radius: 6px;
-            text-align: center;
-            font-size: 0.8rem;
-        }
-
-        .crop-recommendations-container {
-            max-height: 300px;
-            overflow-y: auto;
-            padding-right: 5px;
-        }
-
-        .crop-recommendations-container::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .crop-recommendations-container::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.1);
-            border-radius: 3px;
-        }
-
-        .crop-recommendations-container::-webkit-scrollbar-thumb {
-            background: linear-gradient(135deg, #fd79a8, #e84393);
-            border-radius: 3px;
-        }
-
-        .crop-recommendations-container::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(135deg, #e84393, #d63384);
-        }
-
-        .crop-recommendation {
-            background: linear-gradient(135deg, #fd79a8, #e84393);
-            color: white;
-            padding: 12px;
-            border-radius: 10px;
-            margin-bottom: 8px;
-        }
-
-        .crop-recommendation h5 {
-            margin-bottom: 5px;
-            font-size: 1rem;
-        }
-
-        .crop-score {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 4px 8px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            display: inline-block;
-            margin-bottom: 5px;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 20px;
-            color: #666;
-        }
-
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #3498db;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-            margin: 10px auto;
-        }
-
-        .coordinates-display {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 10px 15px;
-            border-radius: 10px;
-            font-family: monospace;
-            z-index: 1000;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        @keyframes fadeInDown {
-            from {
-                opacity: 0;
-                transform: translateX(-50%) translateY(-30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(-50%) translateY(0);
-            }
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes slideInRight {
-            from {
-                opacity: 0;
-                transform: translateX(100px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        .leaflet-control-zoom {
-            border-radius: 15px !important;
-            overflow: hidden;
-        }
-
-        .leaflet-control-zoom a {
-            background: rgba(255, 255, 255, 0.9) !important;
-            backdrop-filter: blur(10px);
-            border: none !important;
-            font-size: 18px !important;
-            font-weight: bold;
-            transition: all 0.3s ease;
-        }
-
-        .leaflet-control-zoom a:hover {
-            background: rgba(255, 255, 255, 1) !important;
-            transform: scale(1.1);
-        }
-    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <div class="container">
         <div class="header">
@@ -437,7 +46,7 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-    <script>
+    <!-- <script>
         // Initialize the map centered on Pakistan
         const map = L.map('map', {
             zoomControl: true,
@@ -470,29 +79,29 @@
             "features": [
                 {
                     "type": "Feature",
-                    "properties": {"name": "Punjab"},
+                    "properties": { "name": "Punjab" },
                     "geometry": {
                         "type": "Polygon",
                         "coordinates": [[
-                            [69.33, 27.72], [75.85, 27.72], [75.85, 34.02], [73.16, 34.02], 
+                            [69.33, 27.72], [75.85, 27.72], [75.85, 34.02], [73.16, 34.02],
                             [72.20, 33.48], [71.78, 32.06], [69.33, 32.06], [69.33, 27.72]
                         ]]
                     }
                 },
                 {
                     "type": "Feature",
-                    "properties": {"name": "Sindh"},
+                    "properties": { "name": "Sindh" },
                     "geometry": {
                         "type": "Polygon",
                         "coordinates": [[
-                            [66.50, 23.69], [71.78, 23.69], [71.78, 28.55], [69.33, 28.55], 
+                            [66.50, 23.69], [71.78, 23.69], [71.78, 28.55], [69.33, 28.55],
                             [68.84, 27.22], [66.50, 27.22], [66.50, 23.69]
                         ]]
                     }
                 },
                 {
                     "type": "Feature",
-                    "properties": {"name": "KPK"},
+                    "properties": { "name": "KPK" },
                     "geometry": {
                         "type": "Polygon",
                         "coordinates": [[
@@ -502,11 +111,11 @@
                 },
                 {
                     "type": "Feature",
-                    "properties": {"name": "Balochistan"},
+                    "properties": { "name": "Balochistan" },
                     "geometry": {
                         "type": "Polygon",
                         "coordinates": [[
-                            [60.87, 23.69], [69.33, 23.69], [69.33, 31.91], [61.92, 31.91], 
+                            [60.87, 23.69], [69.33, 23.69], [69.33, 31.91], [61.92, 31.91],
                             [61.92, 29.40], [60.87, 29.40], [60.87, 23.69]
                         ]]
                     }
@@ -526,21 +135,21 @@
 
         L.geoJSON(pakistanProvinces, {
             style: provinceStyle,
-            onEachFeature: function(feature, layer) {
+            onEachFeature: function (feature, layer) {
                 layer.bindTooltip(feature.properties.name, {
                     permanent: false,
                     direction: 'center',
                     className: 'province-tooltip'
                 });
-                
-                layer.on('mouseover', function() {
+
+                layer.on('mouseover', function () {
                     layer.setStyle({
                         fillOpacity: 0.3,
                         fillColor: '#3498db'
                     });
                 });
-                
-                layer.on('mouseout', function() {
+
+                layer.on('mouseout', function () {
                     layer.setStyle(provinceStyle);
                 });
             }
@@ -548,14 +157,14 @@
 
         // Major cities markers
         const majorCities = [
-            {name: "Karachi", lat: 24.8607, lon: 67.0011, province: "Sindh"},
-            {name: "Lahore", lat: 31.5804, lon: 74.3587, province: "Punjab"},
-            {name: "Faisalabad", lat: 31.4504, lon: 73.1350, province: "Punjab"},
-            {name: "Rawalpindi", lat: 33.5651, lon: 73.0169, province: "Punjab"},
-            {name: "Multan", lat: 30.1575, lon: 71.5249, province: "Punjab"},
-            {name: "Hyderabad", lat: 25.3960, lon: 68.3578, province: "Sindh"},
-            {name: "Peshawar", lat: 34.0151, lon: 71.5249, province: "KPK"},
-            {name: "Quetta", lat: 30.1798, lon: 66.9750, province: "Balochistan"}
+            { name: "Karachi", lat: 24.8607, lon: 67.0011, province: "Sindh" },
+            { name: "Lahore", lat: 31.5804, lon: 74.3587, province: "Punjab" },
+            { name: "Faisalabad", lat: 31.4504, lon: 73.1350, province: "Punjab" },
+            { name: "Rawalpindi", lat: 33.5651, lon: 73.0169, province: "Punjab" },
+            { name: "Multan", lat: 30.1575, lon: 71.5249, province: "Punjab" },
+            { name: "Hyderabad", lat: 25.3960, lon: 68.3578, province: "Sindh" },
+            { name: "Peshawar", lat: 34.0151, lon: 71.5249, province: "KPK" },
+            { name: "Quetta", lat: 30.1798, lon: 66.9750, province: "Balochistan" }
         ];
 
         // Add animated city markers
@@ -581,17 +190,18 @@
         // Coordinates display
         const coordinatesDisplay = document.getElementById('coordinatesDisplay');
 
-        map.on('mousemove', function(e) {
+        map.on('mousemove', function (e) {
             const lat = e.latlng.lat.toFixed(4);
             const lon = e.latlng.lng.toFixed(4);
             coordinatesDisplay.innerHTML = `Lat: ${lat}, Lon: ${lon}`;
         });
 
         // Click handler for map
-        map.on('click', async function(e) {
+        // Click handler for map
+        map.on('click', async function (e) {
             e.originalEvent.preventDefault();
             e.originalEvent.stopPropagation();
-            
+
             const lat = e.latlng.lat;
             const lon = e.latlng.lng;
 
@@ -608,7 +218,7 @@
                 .openOn(map);
 
             try {
-                // Call your FastAPI endpoint
+                // Fetch from backend
                 const response = await fetch(`http://localhost:8000/api/v1/analysis/${lat}/${lon}`, {
                     method: 'GET',
                     headers: {
@@ -616,25 +226,23 @@
                     },
                     cache: 'no-cache'
                 });
-                
+
                 if (!response.ok) {
                     throw new Error('Failed to fetch data');
                 }
 
-                const data = await response.json();
-                
-                // Create beautiful popup content
-                const popupContent = createPopupContent(data);
-                
-                // Update popup with data
+                const result = await response.json();
+                const isCached = result.cached;
+                const data = result.data;
+
+                // Create popup content
+                const popupContent = createPopupContent(data, isCached);
                 loadingPopup.setContent(popupContent);
 
             } catch (error) {
                 console.error('Error fetching data:', error);
-                
-                // Fallback with demo data
                 const demoData = createDemoData(lat, lon);
-                const popupContent = createPopupContent(demoData);
+                const popupContent = createPopupContent(demoData, false);
                 loadingPopup.setContent(popupContent);
             }
         });
@@ -643,16 +251,16 @@
         function searchLocation() {
             event.preventDefault();
             const query = document.getElementById('searchInput').value.trim();
-            
+
             if (!query) return false;
 
             // Check if it's coordinates (lat, lon)
             const coordMatch = query.match(/(-?\d+\.?\d*),\s*(-?\d+\.?\d*)/);
-            
+
             if (coordMatch) {
                 const lat = parseFloat(coordMatch[1]);
                 const lon = parseFloat(coordMatch[2]);
-                
+
                 if (lat >= 23.69 && lat <= 36.98 && lon >= 60.87 && lon <= 75.85) {
                     map.setView([lat, lon], 12);
                     L.marker([lat, lon]).addTo(map)
@@ -663,10 +271,10 @@
                 }
             } else {
                 // Search for city name
-                const city = majorCities.find(c => 
+                const city = majorCities.find(c =>
                     c.name.toLowerCase().includes(query.toLowerCase())
                 );
-                
+
                 if (city) {
                     map.setView([city.lat, city.lon], 10);
                     L.marker([city.lat, city.lon]).addTo(map)
@@ -676,13 +284,13 @@
                     alert('City not found! Try: Karachi, Lahore, Islamabad, etc.');
                 }
             }
-            
+
             document.getElementById('searchInput').value = '';
             return false;
         }
 
         // Enter key support for search
-        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+        document.getElementById('searchInput').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 searchLocation();
@@ -692,10 +300,14 @@
 
         // Create popup content
         function createPopupContent(data) {
-            const weather = data.weather;
-            const soil = data.soil;
-            const recommendations = data.crop_recommendations;
-            const location = data.location;
+            const weather = data.data.weather;
+            const soil = data.data.soil;
+            const recommendations = data.data.crop_recommendations;
+            const location = data.data.location;
+
+            const cacheBadge = data.cached
+                ? `<span class="cached-badge" title="Data served from cache">⚡ Cached</span>`
+                : '';
 
             let cropsHtml = '';
             if (recommendations && recommendations.length > 0) {
@@ -717,7 +329,7 @@
 
             return `
                 <div class="popup-content-wrapper">
-                    <div class="popup-title">🇵🇰 Agricultural Analysis</div>
+                    <div class="popup-title">🇵🇰 Agricultural Analysis ${cacheBadge}</div>
                     
                     <div class="popup-section">
                         <h4>📍 Location</h4>
@@ -798,7 +410,7 @@
                         planting_months: ["November", "December"]
                     },
                     {
-                        crop_name: "Rice", 
+                        crop_name: "Rice",
                         suitability_score: 6 + Math.random() * 2,
                         irrigation_need: 1200,
                         fertilizer_npk: "120-90-60",
@@ -816,6 +428,7 @@
                 duration: 2
             });
         }, 1000);
-    </script>
+    </script> -->
+    <script src="file.js"></script>
 </body>
 </html>

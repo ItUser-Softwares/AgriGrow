@@ -17,21 +17,15 @@ import logging
 import asyncio
 import aiohttp
 import uvicorn
+from typing import Tuple
+import time
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+weather_cache = {}  # key: (lat, lon), value: {"data": ..., "timestamp": ...}
+crop_cache = {}        # (lat, lon): {"data": ..., "timestamp": ...}
+analysis_cache = {}  
+CACHE_DURATION = 60 * 10  # Cache valid for 10 minutes
 
-# Initialize FastAPI app
-app = FastAPI(title="Pakistan Agriculture API", version="1.0.0")
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # 👈 or restrict to ["http://127.0.0.1:5500"]
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 # Pydantic models
 class WeatherData(BaseModel):
@@ -334,21 +328,54 @@ class DataCollector:
 # Initialize data collector
 data_collector = DataCollector()
 
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Initialize FastAPI app
+app = FastAPI(title="Pakistan Agriculture API", version="1.0.0")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins (for demo; restrict in production)
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 @app.get("/")
 async def root():
     return {"message": "Pakistan Agriculture Data API", "version": "1.0.0"}
 
 @app.get("/api/v1/weather/{lat}/{lon}")
 async def get_weather_data(lat: float, lon: float):
-    """Get weather data for specific coordinates"""
+    """Get weather data for specific coordinates, cached in memory"""
+
     if not (23.0 <= lat <= 37.0 and 60.0 <= lon <= 77.0):
         raise HTTPException(status_code=400, detail="Coordinates outside Pakistan")
-    
+
+    key = (round(lat, 4), round(lon, 4))  # Round to avoid floating-point spam
+    now = time.time()
+
+    # Check if cached and still valid
+    if key in weather_cache:
+        cached = weather_cache[key]
+        if now - cached["timestamp"] < CACHE_DURATION:
+            return {"cached": True, "data": cached["data"]}
+
+    # Fetch fresh data
     weather = await data_collector.fetch_weather_data(lat, lon)
     if not weather:
         raise HTTPException(status_code=500, detail="Failed to fetch weather data")
-    
-    return weather
+
+    # Cache it
+    weather_cache[key] = {
+        "data": weather,
+        "timestamp": now
+    }
+
+    return {"cached": False, "data": weather}
+
 
 @app.get("/api/v1/soil/{lat}/{lon}")
 async def get_soil_data(lat: float, lon: float):
@@ -359,43 +386,64 @@ async def get_soil_data(lat: float, lon: float):
     soil = data_collector.get_soil_data(lat, lon)
     return soil
 
+
 @app.get("/api/v1/crops/{lat}/{lon}")
 async def get_crop_recommendations(lat: float, lon: float):
-    """Get crop recommendations for specific coordinates"""
     if not (23.0 <= lat <= 37.0 and 60.0 <= lon <= 77.0):
         raise HTTPException(status_code=400, detail="Coordinates outside Pakistan")
-    
-    weather = await data_collector.fetch_weather_data(lat, lon)
-    if not weather:
-        raise HTTPException(status_code=500, detail="Failed to fetch weather data")
-    
+
+    key = (round(lat, 4), round(lon, 4))
+    now = time.time()
+
+    if key in crop_cache and now - crop_cache[key]["timestamp"] < CACHE_DURATION:
+        return {"cached": True, "location": {"latitude": lat, "longitude": lon}, "recommendations": crop_cache[key]["data"]}
+
+    # Use cached weather if available
+    if key in weather_cache and now - weather_cache[key]["timestamp"] < CACHE_DURATION:
+        weather = weather_cache[key]["data"]
+    else:
+        weather = await data_collector.fetch_weather_data(lat, lon)
+        if not weather:
+            raise HTTPException(status_code=500, detail="Failed to fetch weather data")
+        weather_cache[key] = {"data": weather, "timestamp": now}
+
     soil = data_collector.get_soil_data(lat, lon)
     recommendations = data_collector.get_crop_recommendations(lat, lon, weather, soil)
-    
+
+    crop_cache[key] = {"data": recommendations, "timestamp": now}
+
     return {
+        "cached": False,
         "location": {"latitude": lat, "longitude": lon},
         "recommendations": recommendations
     }
 
+
 @app.get("/api/v1/analysis/{lat}/{lon}")
 async def get_complete_analysis(lat: float, lon: float):
-    """Get complete agricultural analysis for specific coordinates"""
     if not (23.0 <= lat <= 37.0 and 60.0 <= lon <= 77.0):
         raise HTTPException(status_code=400, detail="Coordinates outside Pakistan")
-    
+
+    key = (round(lat, 4), round(lon, 4))
+    now = time.time()
+
+    if key in analysis_cache and now - analysis_cache[key]["timestamp"] < CACHE_DURATION:
+        return {"cached": True, "data": analysis_cache[key]["data"]}
+
     try:
-        # Fetch weather data
-        weather = await data_collector.fetch_weather_data(lat, lon)
-        if not weather:
-            raise HTTPException(status_code=500, detail="Failed to fetch weather data")
-        
-        # Get soil data
+        # Use cached weather if available
+        if key in weather_cache and now - weather_cache[key]["timestamp"] < CACHE_DURATION:
+            weather = weather_cache[key]["data"]
+        else:
+            weather = await data_collector.fetch_weather_data(lat, lon)
+            if not weather:
+                raise HTTPException(status_code=500, detail="Failed to fetch weather data")
+            weather_cache[key] = {"data": weather, "timestamp": now}
+
         soil = data_collector.get_soil_data(lat, lon)
-        
-        # Get crop recommendations
         recommendations = data_collector.get_crop_recommendations(lat, lon, weather, soil)
-        
-        # Determine region name
+
+        # Region logic
         region = "Unknown"
         if 30.0 <= lat <= 33.0 and 70.0 <= lon <= 75.0:
             region = "Punjab"
@@ -405,8 +453,8 @@ async def get_complete_analysis(lat: float, lon: float):
             region = "Khyber Pakhtunkhwa"
         elif 24.0 <= lat <= 32.0 and 60.0 <= lon <= 70.0:
             region = "Balochistan"
-        
-        return AgricultureResponse(
+
+        result = AgricultureResponse(
             location={
                 "latitude": lat,
                 "longitude": lon,
@@ -417,10 +465,15 @@ async def get_complete_analysis(lat: float, lon: float):
             soil=soil,
             crop_recommendations=recommendations
         )
-        
+
+        analysis_cache[key] = {"data": result, "timestamp": now}
+
+        return {"cached": False, "data": analysis_cache[key]["data"]}
+
     except Exception as e:
         logger.error(f"Error in complete analysis: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
+
 
 @app.post("/api/v1/batch-analysis")
 async def batch_analysis(locations: List[LocationRequest]):
